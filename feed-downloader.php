@@ -20,13 +20,13 @@ $savePath = "";
 
 // make sure there's a URL for the feed
 if (!$url) {
-  echo "You must set the \$url setting.\n";
+  echo "You must set the \$url variable.\n";
   exit();
 }
 
 // make sure there's a URL for the feed
 if (!$savePath) {
-  echo "You must set the \$savePath setting.\n";
+  echo "You must set the \$savePath variable.\n";
   exit();
 }
 
