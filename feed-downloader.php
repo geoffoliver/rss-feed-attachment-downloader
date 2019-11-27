@@ -156,6 +156,11 @@ function download($url, $save) {
 
     // we're done with this, so close it
     fclose($output);
+  
+    // if file just exists but is empty, it's fucked, so we should delete it
+    if (filesize($save) === 0) {
+        unlink($save);
+    }
 
     // check for errors
     if (curl_errno($ch)) {
@@ -164,11 +169,6 @@ function download($url, $save) {
         curl_close($ch);
         var_dump($error);
         return false;
-    }
-
-    // if file just exists but is empty, it's fucked, so we should delete it
-    if (filesize($save) === 0) {
-        unlink($save);
     }
 
     // close up the curl and call it a day!
