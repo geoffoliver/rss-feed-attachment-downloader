@@ -2,7 +2,7 @@
 /**
  * RSS feed attachment downloader.
  *
- * This will read an RSS feed in and download attachments in the "guid" field
+ * This will read an RSS feed in and download attachments in the "enclosure->{'@attributes'}->url" field
  * of the feed items. I made it so I could automate downloading Never Not Funny
  * videos because Plex can't handle video podcast feeds.
  *
