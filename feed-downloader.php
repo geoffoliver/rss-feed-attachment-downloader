@@ -10,10 +10,8 @@
  * @version 1.0.0
  */
 
-// the URL of the feed. if, like me, you need to use a password protected feed,
-// write the url like `protocol://username:password@url.to/the/rss/feed.xml`, and
-// make sure to encode any special characters in your username and password.
-$url = "";
+// the URL of the feed. you shouldn't need to include a username/password anymore
+$url = '';
 
 // where the files should be saved
 $savePath = "";
@@ -42,7 +40,15 @@ $now = date('Y-m-d');
 echo "Downloading feed ({$now})...\n";
 
 // download the feed and convert it to json because i'm lazy
-$feed = json_decode(json_encode(simplexml_load_string(file_get_contents($url))));
+$feed = json_decode(
+	json_encode(
+		simplexml_load_string(
+			file_get_contents($url),
+			null,
+			LIBXML_NOCDATA
+		)
+	)
+);
 
 // this is the directory where we'll put the files for this feed
 $filePath = $savePath . DIRECTORY_SEPARATOR . $feed->channel->title;
@@ -82,37 +88,40 @@ usort($items, function($a, $b) {
     return ($a->pubDate < $b->pubDate) ? -1 : 1;
 });
 
+// make sure we only look at things newer than the last thing downloaded
+$items = array_filter($items, function($item) use ($lastDlTime) {
+	return ($item->pubDate > $lastDlTime);
+});
+
 // loop over the items and maybe download them
 foreach ($items as $item) {
-    // make sure the thing we're looking at is newer than the last thing downloaded
-    if ($item->pubDate > $lastDlTime) {
-        // nice feedback message
-        echo "Downloading \"{$item->title}\" from {$item->guid}\n";
+	$url = $item->enclosure->{'@attributes'}->url;
+	// nice feedback message
+	echo "Downloading \"{$item->title}\" from {$url}\n";
 
-        // all of this to get the goddamn extension for the file
-        $parts = explode('?', $item->guid);
-        $dots = explode('.', $parts[0]);
-        $ext = array_pop($dots);
-        $filename = $item->title . '.' . $ext;
+	// all of this to get the goddamn extension for the file
+	$parts = explode('?', $url);
+	$dots = explode('.', $parts[0]);
+	$ext = array_pop($dots);
+	$filename = trim($item->title) . '.' . trim($ext);
 
-        // this is where the file we'll download will live
-        $fullPath = $filePath . DIRECTORY_SEPARATOR . $filename;
+	// this is where the file we'll download will live
+	$fullPath = $filePath . DIRECTORY_SEPARATOR . $filename;
 
-        if (file_exists($fullPath)) {
-            // the file already exists, so just skip it
-            echo "File {$filename} already exists, skipping download.\n";
-            file_put_contents($lastDlFile, $item->pubDate);
-        } else {
-            if (download($item->guid, $fullPath)) {
-                // download success! give some feedback and update the last download timestamp
-                echo "\nDownload complete!\n";
-                file_put_contents($lastDlFile, $item->pubDate);
-            } else {
-                // download failed. oh well :shrug:
-                echo "\nUnable to download file!\n";
-            }
-        }
-    }
+	if (file_exists($fullPath)) {
+		// the file already exists, so just skip it
+		echo "File {$filename} already exists, skipping download.\n";
+		file_put_contents($lastDlFile, $item->pubDate);
+	} else {
+		if (download($url, $fullPath)) {
+			// download success! give some feedback and update the last download timestamp
+			echo "\nDownload complete!\n";
+			file_put_contents($lastDlFile, $item->pubDate);
+		} else {
+			// download failed. oh well :shrug:
+			echo "\nUnable to download file!\n";
+		}
+	}
 }
 
 // tada!
@@ -156,11 +165,6 @@ function download($url, $save) {
 
     // we're done with this, so close it
     fclose($output);
-  
-    // if file just exists but is empty, it's fucked, so we should delete it
-    if (filesize($save) === 0) {
-        unlink($save);
-    }
 
     // check for errors
     if (curl_errno($ch)) {
@@ -169,6 +173,11 @@ function download($url, $save) {
         curl_close($ch);
         var_dump($error);
         return false;
+    }
+
+    // if file just exists but is empty, it's fucked, so we should delete it
+    if (filesize($save) === 0) {
+        unlink($save);
     }
 
     // close up the curl and call it a day!
