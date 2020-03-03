@@ -4,7 +4,7 @@
  *
  * This will read an RSS feed in and download attachments in the "guid" field
  * of the feed items. I made it so I could automate downloading Never Not Funny
- * videos because Plex can't handle password protected podcast feeds.
+ * videos because Plex can't handle video podcast feeds.
  *
  * @author Geoff Oliver <geoff@plan8studios.com>
  * @version 1.0.0
