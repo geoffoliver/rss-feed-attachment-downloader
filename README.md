@@ -6,5 +6,5 @@ I made it so I could automate downloading [Never Not Funny](http://www.nevernotf
 # Usage
 - Download the file.
 - Edit the file and set the `$url` and `$savePath` variables.
-- Maybe [change where the URL is pulled from, depending on your feed](blob/master/feed-downloader.php#L98)
+- Maybe [change where the URL is pulled from, depending on your feed](feed-downloader.php#L98)
 - Run the file like `php -f feed-downloader.php`.
